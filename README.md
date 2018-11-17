@@ -4,7 +4,7 @@ I need to run [SAT-Assemlber](https://github.com/zhangy72/SAT-Assembler.git) to 
 2) The current "networkx" module is no long compatible with the assembler.py script here. Changed to be compatible with "networkx" version 2.2
 3) There are a few bugs in SAT-Assembler.sh and assembler.py
 
-### install dependency:
+### Install dependency:
 1) First intall conda following instructions [here](https://conda.io/docs/user-guide/install/linux.html)
 
 2) Then create a new environment with python2.7 and networx from conda-forge channel:
@@ -25,12 +25,12 @@ git clone https://github.com/jiarong/SAT-Assembler.git`
 
 ```
 SAT-Assembler.sh -m <HMM file> -f <fasta file> [options]  
+  options:
+    -h:  show this message
+    -t:  alignment overlap threshold, default: 20;
+    -d:  relative overlap difference threshold: 0.15;
+    -o:  output directory
 ```
-Options includes:
-  -h:  show this message
-  -t:  alignment overlap threshold, default: 20;
-  -d:  relative overlap difference threshold: 0.15;
-  -o:  output directory
 
 An example with test data:
 
