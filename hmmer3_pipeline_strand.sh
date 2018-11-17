@@ -4,7 +4,7 @@ if [ $# -ne 3 ];then
   echo "Arguments: <hmm file> <fasta file> <frame:1-6>"
   exit
 fi
-hmmsearch -E 1000 $1 $2 | grep -E '^Accession:|^>>|^\ *[1-9]+ !|^\ *[1-9]+ \?' | awk -v frame="$3" '
+hmmsearch -E 1000 $1 $2 | grep -E '^Query:|^Accession:|^>>|^\ *[1-9]+ !|^\ *[1-9]+ \?' | awk -v frame="$3" '
 BEGIN {
   detail = ""
   if (frame <= 3) {
@@ -17,7 +17,9 @@ BEGIN {
   if ($1 == ">>") {
     seq=$2
   } else if ($1 == "Accession:") {
-    hmm_name = $2
+    acc = substr($2, 1, 7)
+  } else if ($1 == "Query:") {
+    name = $2
   } else {
     evalue = $5
     score = $3
@@ -25,7 +27,15 @@ BEGIN {
     model_end = $8
     align_begin = $13
     align_end = $14
-    print seq, substr(hmm_name, 1, 7), score, evalue, 
+    if (acc) {
+      hmm_name = acc
+    } else if (name) {
+      hmm_name = name
+    } else {
+      print "No  Query (NAME) or Accession (ACC) in hmmsearch output..\nPlease add NAME and/or ACC in hmm files.." > "/dev/stderr"
+      exit 1
+    }
+    print seq, hmm_name, score, evalue, 
           model_begin, model_end, align_begin, align_end, symbol 
   }
 }'

@@ -18,18 +18,28 @@ def main():
         os.makedirs(dir)
     content = []
     acc = ''
+    name = ''
     with open(hmm_file_name, 'Ur') as f:
         for line in f:
             content.append(line)
             items = line.strip().split()
             if items[0] == 'ACC':
                 acc = items[1][:7] 
+            if items[0] == 'NAME':
+                name = items[1]
             elif items[0] == '//':
                 if acc:
                     file_name = dir.rstrip('/') + '/' + acc + '.hmm' 
-                    output_hmm_file(content, file_name)
-                    content = []
-                    acc = ''      
+                elif name:
+                    file_name = dir.rstrip('/') + '/' + name + '.hmm' 
+                else:
+                    sys.stderr.write('*** hmm file must have ACC or NAME lines..')
+                    sys.exit(1)
+
+                output_hmm_file(content, file_name)
+                content = []
+                acc = ''      
+                name = ''
 
 if __name__ == '__main__':
     main()
