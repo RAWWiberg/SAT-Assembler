@@ -315,7 +315,8 @@ def get_contig_from_path(path, id, G):
     contig.set_nodes(nodes)
     contig.set_tags(tags)
     contig.set_members(members)
-    coverage /= contig.length 
+    if contig.length != 0:
+        coverage /= contig.length 
     contig.set_coverage(coverage)
     contig.set_path(contig_path)
     contig.set_avg_overlap()
@@ -323,28 +324,28 @@ def get_contig_from_path(path, id, G):
             
 def get_sink_nodes(G):
     sink_nodes = []
-    for node in G.nodes_iter():
+    for node in G.nodes():
         if G.out_degree(node) == 0:
             sink_nodes.append(node)
     return sink_nodes
 
 def get_all_source_nodes(G):
     all_source_nodes = []
-    for node in G.nodes_iter():
+    for node in G.nodes():
         if G.in_degree(node) == 0:
             all_source_nodes.append(node)
     return all_source_nodes
 
 def set_overlap_graph_coverage(G):
-    for node in G.nodes_iter():
+    for node in G.nodes():
         overlap_sum = 0.0
-        for pred in G.predecessors_iter(node):
+        for pred in G.predecessors(node):
             overlap_sum += G[pred][node]['overlap']
-        for succ in G.successors_iter(node):
+        for succ in G.successors(node):
             overlap_sum += G[node][succ]['overlap']
         G.node[node]['coverage'] = overlap_sum / G.node[node]['length']   
     # set coverage difference for edges.
-    for node1, node2 in G.edges_iter():
+    for node1, node2 in G.edges():
         coverage1 = G.node[node1]['coverage']
         coverage2 = G.node[node2]['coverage']
         G[node1][node2]['delta_coverage'] = abs(coverage1 - coverage2)     
@@ -354,7 +355,7 @@ def set_overlap_graph_parameters(target_domain, G):
     G.graph['combined_basename'] = 'nodes'
     G.graph['combined_index'] = 1
     avg_length = 0.0
-    for node in G.nodes_iter():
+    for node in G.nodes():
         avg_length += G.node[node]['length']
     G.graph['avg_length'] = avg_length / G.number_of_nodes()
 
@@ -363,12 +364,12 @@ def set_overlap_graph_parameters(target_domain, G):
 def remove_redundant_edges(G):
     # only for single nodes.
     transitive_nodes = {}
-    edges = G.edges()
+    edges = list(G.edges())
     for begin_node, end_node in edges:
-        current_edge_data = G.edge[begin_node][end_node]
+        current_edge_data = G[begin_node][end_node]
         G.remove_edge(begin_node, end_node)
         if not nx.has_path(G, begin_node, end_node):
-            G.add_edge(begin_node, end_node, current_edge_data) 
+            G.add_edge(begin_node, end_node, **current_edge_data) 
         else:
             transitive_nodes[(begin_node, end_node)] = True
     return transitive_nodes
@@ -386,7 +387,7 @@ def remove_cycles(G):
 
 def get_shortest_edge(G):
     min_overlap = 100000
-    for node1, node2 in G.edges_iter():
+    for node1, node2 in G.edges():
         if G[node1][node2]['overlap'] < min_overlap:
             min_edge = (node1, node2)
             min_overlap = G[node1][node2]['overlap']
@@ -394,7 +395,7 @@ def get_shortest_edge(G):
 
 def get_sink_num(G):
     sink_num = 0
-    for node in G.nodes_iter():
+    for node in G.nodes():
         if G.out_degree(node) == 0:
             sink_num += 1
     return sink_num
@@ -422,7 +423,7 @@ def output_tag_original_read_mapping(compressed_read_dict):
 
 # find the nodes that have two out-going edges.
 def output_bi_nodes(subgraph):
-    for node in subgraph.nodes_iter():
+    for node in subgraph.nodes():
         if subgraph.out_degree(node) > 1:
             print 'out', node, subgraph[node]
         if subgraph.in_degree(node) > 1:
@@ -432,7 +433,7 @@ def output_bi_nodes(subgraph):
 # count overlap between the same genes and different genes.
 def count_overlaps_between_genes(subgraph):
     overlaps = [[], []] # inner gene and inter gene.
-    for node in subgraph.nodes_iter():
+    for node in subgraph.nodes():
         if subgraph.out_degree(node) > 1:
             print 'out', node, subgraph.out_edges(node, data=True) 
             for node1, node2 in subgraph.out_edges(node):
@@ -459,7 +460,7 @@ def count_overlaps_between_genes(subgraph):
 # all edges will be considered.
 def count_overlaps(G):
     overlaps = [[], []]
-    for node1, node2 in G.edges_iter():
+    for node1, node2 in G.edges():
         overlap = G[node1][node2]['overlap']
         gene1 = get_gene_from_node(node1)
         gene2 = get_gene_from_node(node2)
@@ -477,7 +478,7 @@ def output_tags_fasta(compressed_read_dict):
         print compressed_read_dict[tag_name].seq
 
 def keep_single_out_edge(G, pair_num_dict):
-    for node in G.nodes_iter():
+    for node in G.nodes():
         if len(G.out_edges(node)) > 1:
             kept_succs = set()
             all_succs = G.successors(node)
@@ -501,7 +502,7 @@ def keep_single_out_edge(G, pair_num_dict):
                         G.remove_edge(node, succ)
 
 def keep_single_in_edge(G, pair_num_dict):
-    for node in G.nodes_iter():
+    for node in G.nodes():
         if len(G.in_edges(node)) > 1:
             kept_preds = set()
             all_preds = G.predecessors(node)
@@ -525,7 +526,7 @@ def keep_single_in_edge(G, pair_num_dict):
                         G.remove_edge(pred, node)
 
 def trim_multiple_out_edges(G, pair_num_dict):
-    for node in G.nodes_iter():
+    for node in G.nodes():
         if len(G.out_edges(node)) > 1:
             #print node 
             cds_set = G.node[node]['cds_set']
@@ -558,7 +559,7 @@ def trim_multiple_out_edges(G, pair_num_dict):
                         G.remove_edge(node, succ)
 
 def trim_multiple_in_edges(G, pair_num_dict):
-    for node in G.nodes_iter():
+    for node in G.nodes():
         if len(G.in_edges(node)) > 1:
             #print node
             cds_set = G.node[node]['cds_set']
@@ -593,12 +594,12 @@ def trim_multiple_in_edges(G, pair_num_dict):
 def show_best_out_edges(G):
     correct = 0
     incorrect = 0
-    for node in G.nodes_iter():
+    for node in G.nodes():
         if len(G.out_edges(node)) >= 2:
             gene_set = get_gene_set(node)
             metrics = []
             succ_gene_set = set()
-            for succ in G.successors_iter(node):
+            for succ in G.successors(node):
                 succ_gene_set |= get_gene_set(succ)
                 overlap = G[node][succ]['overlap']
                 hamming = G[node][succ]['hamming']
@@ -617,12 +618,12 @@ def show_best_out_edges(G):
 def show_best_in_edges(G):
     correct = 0
     incorrect = 0
-    for node in G.nodes_iter():
+    for node in G.nodes():
         if len(G.in_edges(node)) >= 2:
             gene_set = get_gene_set(node)
             metrics = []
             pred_gene_set = set()
-            for pred in G.predecessors_iter(node):
+            for pred in G.predecessors(node):
                 pred_gene_set |= get_gene_set(pred)
                 overlap = G[pred][node]['overlap']
                 hamming = G[pred][node]['hamming']
@@ -639,12 +640,12 @@ def show_best_in_edges(G):
     print 'correct:%d' % (correct,), 'incorrect:%d' % (incorrect,) 
 
 def show_multiple_in_edges(G):
-    for node in G.nodes_iter():
+    for node in G.nodes():
         if len(G.in_edges(node)) >= 2:
             gene_set = get_gene_set(node)
             metrics = []
             pred_gene_set = set()
-            for pred in G.predecessors_iter(node):
+            for pred in G.predecessors(node):
                 pred_gene_set |= get_gene_set(pred)
                 overlap = G[pred][node]['overlap']
                 hamming = G[pred][node]['hamming']
@@ -657,10 +658,10 @@ def show_multiple_in_edges(G):
 def trim_out_edges(G):
     DELTA_OVERLAP_THRES = 0.1
     DELTA_COVERAGE_THRES = 5.0
-    for node in G.nodes_iter():
+    for node in G.nodes():
         if len(G.out_edges(node)) >= 2:
             metrics = []
-            for succ in G.successors_iter(node):
+            for succ in G.successors(node):
                 overlap = G[node][succ]['overlap']
                 hamming = G[node][succ]['hamming']
                 delta_coverage = G[node][succ]['delta_coverage']
@@ -680,16 +681,16 @@ def trim_out_edges(G):
                     kept_succs.append(succs[i+1][-1])
                 else:
                     break  
-            for succ in G.successors_iter(node):
+            for succ in G.successors(node):
                 if succ not in kept_succs:
                     G.remove_edge(node, succ)
 
 # keep the best edge for nodes that have multiple out-going edges.
 def keep_best_out_edges(G):
-    for node in G.nodes_iter():
+    for node in G.nodes():
         if len(G.out_edges(node)) >= 2:
             metrics = []
-            for succ in G.successors_iter(node):
+            for succ in G.successors(node):
                 overlap = G[node][succ]['overlap']
                 hamming = G[node][succ]['hamming']
                 delta_coverage = G[node][succ]['delta_coverage']
@@ -701,10 +702,10 @@ def keep_best_out_edges(G):
                 G.remove_edge(node, metrics[i][-1])
 
 def keep_best_in_edges(G):
-    for node in G.nodes_iter():
+    for node in G.nodes():
         if len(G.in_edges(node)) >= 2:
             metrics = []
-            for pred in G.predecessors_iter(node):
+            for pred in G.predecessors(node):
                 overlap = G[pred][node]['overlap']
                 hamming = G[pred][node]['hamming']
                 delta_coverage = G[pred][node]['delta_coverage']
@@ -716,7 +717,7 @@ def keep_best_in_edges(G):
                 G.remove_edge(metrics[i][-1], node)
 
 def show_all_edges_states(G):
-    for node1, node2 in G.edges_iter():
+    for node1, node2 in G.edges():
          print '>', node1, node2, G[node1][node2]['overlap'], G[node1][node2]['hamming']
          print G.node[node1]['descs'], G.node[node1]['begin_state']
          print G.node[node2]['descs'], G.node[node2]['begin_state']
@@ -817,10 +818,10 @@ def combine_single_paths(G):
     while True:
         nodes_to_combine = []
         # combine backward the nodes with in-degree = 1
-        for node in G.nodes_iter():
+        for node in G.nodes():
             in_deg = G.in_degree(node)
             if in_deg == 1:
-                pred = G.predecessors(node)[0]
+                pred = list(G.predecessors(node))[0]
                 out_deg_pred = G.out_degree(pred)
                 if out_deg_pred == 1:
                     nodes_to_combine.append(node)
@@ -829,7 +830,7 @@ def combine_single_paths(G):
             break
         for curr in nodes_to_combine:
             # predecessor of current node
-            pred = G.predecessors(curr)[0]
+            pred = list(G.predecessors(curr))[0]
             # incoming edges to the combined node
             predspreds = G.predecessors(pred)
             # outgoing edges from the combined node
@@ -839,10 +840,10 @@ def combine_single_paths(G):
             # make links between the new node and other nodes
             for p in predspreds:
                 old_edge_data = G[p][pred]
-                G.add_edge(p, new_node, old_edge_data)
+                G.add_edge(p, new_node, **old_edge_data)
             for s in succs:
                 old_edge_data = G[curr][s]
-                G.add_edge(new_node, s, old_edge_data)
+                G.add_edge(new_node, s, **old_edge_data)
             # remove used nodes
             G.remove_node(curr)
             G.remove_node(pred)
@@ -866,12 +867,12 @@ def combine_two_nodes(node1, node2, G):
     new_node_data = dict(seq=seq, length=length, coverage=coverage, 
                          members=members, tags=tags)     
     assert not G.has_node(name)
-    G.add_node(name, new_node_data)
+    G.add_node(name, **new_node_data)
     return name
 
 def get_all_graph_tips(G, coverage_thres):
     tips = set()
-    for node in G.nodes_iter():
+    for node in G.nodes():
         if is_out_tip(node, G, coverage_thres) or \
            is_in_tip(node, G, coverage_thres):
             tips.add(node)
@@ -911,8 +912,8 @@ def is_inferior_node(node, G):
     if not G.predecessors(node):
         return False
     coverage = G.node[node]['coverage']
-    pred = G.predecessors(node)[0]
-    for succ in G.successors_iter(pred):
+    pred = list(G.predecessors(node))[0]
+    for succ in G.successors(pred):
         if succ != node and G.node[succ]['coverage'] > coverage:
             return True
     return False  
@@ -1008,7 +1009,7 @@ def get_rectangles(source_node, G):
     # the begin and end nodes of rectangles.
     rectangles = set()
     for curr, pred in joints:
-        for other_pred in G.predecessors_iter(curr):
+        for other_pred in G.predecessors(curr):
             if other_pred != pred:
                 lca = get_lca(other_pred, pred, G)
                 if lca:
@@ -1086,19 +1087,19 @@ def show_all_rectangles(G):
                     print
 
 def set_all_nodes_cds_set(G):
-    for node in G.nodes_iter():
+    for node in G.nodes():
         descs = G.node[node]['descs']
         cds_set = get_cds_set_from_descs(descs)
         G.node[node]['cds_set'] = cds_set
             
 
 def show_all_node_cds_set(G):
-    for node in G.nodes_iter():
+    for node in G.nodes():
         cds_set = G.node[node]['cds_set']
         print node, ' '.join(cds_set)
 
 def show_all_edge_cds_set(G): 
-    for node1, node2 in G.edges_iter():
+    for node1, node2 in G.edges():
         cds_set1 = G.node[node1]['cds_set']
         cds_set2 = G.node[node2]['cds_set']
         print '>', node1, node2
@@ -1178,7 +1179,7 @@ def get_node_pair_set(node1, node2, G):
     return pair_set
 
 def show_all_nodes_pair_num(G):
-    all_nodes = G.nodes()
+    all_nodes = list(G.nodes())
     node_num = len(all_nodes)
     for i in xrange(node_num-1):
         node1 = all_nodes[i]
@@ -1190,7 +1191,7 @@ def show_all_nodes_pair_num(G):
 
 def get_all_nodes_pair_num_dict(G):
     pair_num_dict = {}
-    all_nodes = G.nodes()
+    all_nodes = list(G.nodes())
     node_num = len(all_nodes)
     for i in xrange(node_num-1):
         node1 = all_nodes[i]
@@ -1202,7 +1203,7 @@ def get_all_nodes_pair_num_dict(G):
     return pair_num_dict
 
 def check_all_nodes_pair_set(G):
-    all_nodes = G.nodes()
+    all_nodes = list(G.nodes())
     node_num = len(all_nodes)
     for i in xrange(node_num-1):
         node1 = all_nodes[i]
@@ -1448,7 +1449,7 @@ def get_target_nodes(path, rectangles, G):
             if is_subpath(connected_path, path):
                 target_nodes.append(tuple(connected_path[1:-1]))
     sink = path[-1]
-    for pred in G.predecessors_iter(sink):
+    for pred in G.predecessors(sink):
       if G.out_degree(pred) > 1:
           target_nodes.append((sink,))
     target_nodes.sort(key=lambda nodes: path.index(nodes[0]))
@@ -1919,13 +1920,12 @@ def get_transitive_edges(G):
     transitive_edges = set()
     edges = G.edges()
     for begin_node, end_node in edges:
-        current_edge_data = G.edge[begin_node][end_node]
+        current_edge_data = G.edges[begin_node][end_node]
         G.remove_edge(begin_node, end_node)
         if nx.has_path(G, begin_node, end_node):
             transitive_edges.add((begin_node, end_node))
-            print begin_node, end_node
         else: 
-            G.add_edge(begin_node, end_node, current_edge_data)
+            G.add_edge(begin_node, end_node, **current_edge_data)
 
 def process_overlap_graph(target_domain, G):
     set_overlap_graph_parameters(target_domain, G)
@@ -1937,7 +1937,7 @@ def process_overlap_graph(target_domain, G):
 
 def get_transitive_dict(transitive_nodes, G):
     transitive_dict = {}
-    nodes = G.nodes()
+    nodes = list(G.nodes())
     node_num = len(nodes)
     for i in xrange(node_num-1):
         node1 = nodes[i]
@@ -1983,7 +1983,7 @@ def get_target_nodes(rectangles, G):
             target_nodes.append(tuple(connected_path[1:-1]))
     sinks = get_sink_nodes(G)
     for sink in sinks:
-        for pred in G.predecessors_iter(sink):
+        for pred in G.predecessors(sink):
           if G.out_degree(pred) > 1 and G.in_degree(pred) > 1:
               target_nodes.append((sink,))
     return target_nodes
@@ -2023,7 +2023,7 @@ def dfs(G, curr_node, path, paths,
     if G.out_degree(curr_node) == 0:
         paths.append(path[:])
     else:
-        for succ in G.successors_iter(curr_node):
+        for succ in G.successors(curr_node):
             dfs(G, succ, path, paths,
                 target_nodes, target_node_set, supports)
     path.pop()
@@ -2155,7 +2155,7 @@ def main():
                                                     EVALUE_THRES)
     target_read_dict = aligned_read_dict
     if not aligned_read_dict:
-        sys.stderr('No read belongs to the gene family! No contig is generated!')
+        sys.stderr.write('No read belongs to the gene family! No contig is generated!\n')
         sys.exit(2)
     set_read_seq(fasta_file_name, target_read_dict)
     compressed_read_dict = get_compressed_read_dict(target_read_dict, 'tag')
