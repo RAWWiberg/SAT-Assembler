@@ -3,6 +3,8 @@
 # You may redistribute this software under the terms of GNU GENERAL PUBLIC LICENSE.
 # pipeline of MetaDomain. 
 
+set -e
+
 # input: 
 # -m: hmm file;
 # -f: fasta file;
@@ -19,7 +21,7 @@ usage() {
     -h:  show this message
     -t:  alignment overlap threshold, default: 20;
     -d:  relative overlap difference threshold: 0.15;
-    -o:  output file name, default: stdandard error"
+    -o:  output directory"
 }
 
 hmm=
@@ -97,17 +99,18 @@ tmp="$(cd $out && pwd)"
 base_fasta=`echo $fasta | awk '{split($1,a,"/"); print a[length(a)]}'`
 
 $DIR/DNA2Protein 1-6 $fasta $tmp/${base_fasta} 
-# generate a list of domains in the input hmm file.
+## generate a list of domains in the input hmm file.
 python $DIR/parse_hmm_files.py $hmm $tmp/HMMs
 ls $tmp/HMMs | while read line
 do
-  hmm_acc=`echo $line | awk '{print substr($1,1,7)}'`
+  hmm_acc=$(basename $line .hmm)
   cat /dev/null >$tmp/${base_fasta}_${hmm_acc}.hmmer
   for i in {1..6}
   do
-    bash $DIR/hmmer3_pipeline_strand.sh $tmp/HMMs/$line $tmp/${base_fasta}.frame${i} $i >$tmp/${base_fasta}_${hmm_acc}.hmmer
+   bash $DIR/hmmer3_pipeline_strand.sh $tmp/HMMs/$line $tmp/${base_fasta}.frame${i} $i >> $tmp/${base_fasta}_${hmm_acc}.hmmer
   done
+  echo python $DIR/assembler.py $tmp/${base_fasta}_${hmm_acc}.hmmer $fasta ${hmm_acc} $t $d $out 
   python $DIR/assembler.py $tmp/${base_fasta}_${hmm_acc}.hmmer $fasta ${hmm_acc} $t $d $out 
 done
-rm -r $tmp/HMMs
-rm $tmp/${base_fasta}.frame?
+#rm -r $tmp/HMMs
+#rm $tmp/${base_fasta}.frame?
