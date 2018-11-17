@@ -22,7 +22,7 @@ conda install -c bioconda biopython=1.68 hmmer=3.1b2
 1. Clone the repository:   
 
 ```bash
-git clone https://github.com/jiarong/SAT-Assembler.git`
+git clone https://github.com/jiarong/SAT-Assembler.git
 ```
 
 2. To run SAT-Assembler, use the following command:  
