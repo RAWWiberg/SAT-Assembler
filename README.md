@@ -8,10 +8,14 @@ I need to run [SAT-Assemlber](https://github.com/zhangy72/SAT-Assembler.git) to 
 1) First intall conda following instructions [here](https://conda.io/docs/user-guide/install/linux.html)
 
 2) Then create a new environment with python2.7 and networx from conda-forge channel:
+```bash
 conda create -c conda-forge -n SAT python=2.7 networkx=2.2 
+```
 
 3) Install Biopython and HMMER3 from bioconda channel:
+```bash
 conda install -c bioconda biopython=1.68 hmmer=3.1b2
+```
 
 ### How to run:
 
