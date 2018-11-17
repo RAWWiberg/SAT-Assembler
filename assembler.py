@@ -478,10 +478,10 @@ def output_tags_fasta(compressed_read_dict):
         print compressed_read_dict[tag_name].seq
 
 def keep_single_out_edge(G, pair_num_dict):
-    for node in G.nodes():
+    for node in list(G.nodes()):
         if len(G.out_edges(node)) > 1:
             kept_succs = set()
-            all_succs = G.successors(node)
+            all_succs = list(G.successors(node))
             for succ in all_succs:
                 if (node, succ) in pair_num_dict or (succ, node) in pair_num_dict:
                     kept_succs.add(succ)
@@ -502,10 +502,10 @@ def keep_single_out_edge(G, pair_num_dict):
                         G.remove_edge(node, succ)
 
 def keep_single_in_edge(G, pair_num_dict):
-    for node in G.nodes():
+    for node in list(G.nodes()):
         if len(G.in_edges(node)) > 1:
             kept_preds = set()
-            all_preds = G.predecessors(node)
+            all_preds = list(G.predecessors(node))
             for pred in all_preds:
                 if (pred, node) in pair_num_dict or (node, pred) in pair_num_dict:
                     kept_preds.add(pred)
@@ -526,12 +526,12 @@ def keep_single_in_edge(G, pair_num_dict):
                         G.remove_edge(pred, node)
 
 def trim_multiple_out_edges(G, pair_num_dict):
-    for node in G.nodes():
+    for node in list(G.nodes()):
         if len(G.out_edges(node)) > 1:
             #print node 
             cds_set = G.node[node]['cds_set']
             kept_succs = set()
-            all_succs = G.successors(node)
+            all_succs = list(G.successors(node))
             for succ in all_succs:
                 if (node, succ) in pair_num_dict or (succ, node) in pair_num_dict:
                     kept_succs.add(succ)
@@ -559,12 +559,12 @@ def trim_multiple_out_edges(G, pair_num_dict):
                         G.remove_edge(node, succ)
 
 def trim_multiple_in_edges(G, pair_num_dict):
-    for node in G.nodes():
+    for node in list(G.nodes()):
         if len(G.in_edges(node)) > 1:
             #print node
             cds_set = G.node[node]['cds_set']
             kept_preds = set()
-            all_preds = G.predecessors(node)
+            all_preds = list(G.predecessors(node))
             for pred in all_preds:
                 if (pred, node) in pair_num_dict or (node, pred) in pair_num_dict:
                     #print pred, node
@@ -1053,7 +1053,7 @@ def get_lca(node1, node2, G):
         all_preds2 |= preds2
         ca_set = all_preds1 & all_preds2
         if ca_set:
-            sorted_nodes_list = nx.topological_sort(G)
+            sorted_nodes_list = list(nx.topological_sort(G))
             ca_list = list(ca_set)
             lca = max(ca_list, key=lambda ca: sorted_nodes_list.index(ca))
             break
