@@ -1,48 +1,53 @@
-# Version
-This software was last updated 9/17/2014. Questions, comments, suggestions, etc?  
+I need to run [SAT-Assemlber](https://github.com/zhangy72/SAT-Assembler.git) to compare with a few other gene targeted analysis tools. I found a few issues and fixed them. Hope this will be helpful for others:
 
-Send emails to nick.zhangyuan@gmail.com  
+1) The original tool was tailor to Pfam hmms, which require "ACC" (Accession #) line in hmm. Changed to use "NAME" instead if "ACC" is not present in hmm.
+2) The current "networkx" module is no long compatible with the assembler.py script here. Changed to be compatible with "networkx" version 2.2
+3) There are a few bugs in SAT-Assembler.sh and assembler.py
 
-# Installation 
+### install dependency:
+1) First intall conda following instructions [here](https://conda.io/docs/user-guide/install/linux.html)
+
+2) Then create a new environment with python2.7 and networx from conda-forge channel:
+conda create -c conda-forge -n SAT python=2.7 networkx=2.2 
+
+3) Install Biopython and HMMER3 from bioconda channel:
+conda install -c bioconda biopython=1.68 hmmer=3.1b2
+
+### How to run:
+
 1. Clone the repository:   
 
-  `git clone git@github.com:zhangy72/SAT-Assembler.git`
-
-2. g++ compiler is required in your Unix system. To install SAT-Assembler, run the Makeme file using the following command:  
-
-  `make` 
-
-3. Dependencies:   
-  1) HMMER3 (http://hmmer.janelia.org/). The bin file hmmsearch should be in the path.  
-  2) Python version 2.5 or later.  
-  3) Python libraries of NetworkX (http://networkx.lanl.gov/) and Biopython (http://biopython.org/wiki/Main_Page).  
-
-# Run SAT-Assembler   
-To run SAT-Assembler, use the following command:  
-```
-./SAT-Assembler.sh -m <HMM file> -f <fasta file> [options]  
-  Options:
-    -h:  show this message
-    -t:  alignment overlap threshold, default: 20;
-    -d:  relative overlap difference threshold: 0.15;
-    -o:  output file name, default: stdandard error
+```bash
+git clone https://github.com/jiarong/SAT-Assembler.git`
 ```
 
-1. The hmm file can contain multiple hmm models and should be in HMMER3.0's hmm file format. All the hmm files of Pfam database can be downloaded from Pfam (http://pfam.xfam.org/).  
-2. If you build the hmm file yourself using hmm-build in HMMER3, please make sure you have a accession number (the line that begins with ACC) as its unique identifier. Otherwise, please manual add it. 
-3. The nucleotide sequence file should be in fasta format. All the reads should be in a single fasta file.  
-4. The format of paired-end reads is should be in ".1" and ".2" notation. An example of a paired-end read will be gnl|SRA|SRR360147.1.1 and gnl|SRA|SRR360147.1.2.  
- 
-# Output
-The output includes a contig file in fasta format and a scaffold file. The name of the fasta file and the scaffold file include the name of the family. For example, the contig file and scaffold file for PF00005 are PF00005_contigs.fa and PF00005_scaffolds.txt. Each line of the scaffold file indicates the contigs that are from the same scaffold.
+2. To run SAT-Assembler, use the following command:  
 
-# Reference SAT-Assembler
+```
+SAT-Assembler.sh -m <HMM file> -f <fasta file> [options]  
+```
+Options includes:
+  -h:  show this message
+  -t:  alignment overlap threshold, default: 20;
+  -d:  relative overlap difference threshold: 0.15;
+  -o:  output directory
 
-SAT-Assembler can be referenced as:   
+An example with test data:
 
-<a href="http://www.ploscompbiol.org/article/info%3Adoi%2F10.1371%2Fjournal.pcbi.1003737">Yuan Zhang, Yanni Sun, and Jamse R. Cole. A Scalable and Accurate Targeted Gene Assembly Tool (SAT-Assembler) for Next-Generation Sequencing Data. PLOS Computational Biology, 10(8): e1003737, 2014</a>
+```bash
+cd SAT-Assembler/test
+gzip -d -c P_syringae-se-200K.fa.gz > P_syringae-se-200K.fa
+../SAT-Assembler.sh -m rplB.hmm -f P_syringae-se-200K.fa -o test.out
+```
+You will see the `rplB_contigs.fa` and `rplB_scaffolds.txt` in `test.out`
 
-# License
-Copyright (C) 2014, Yuan Zhang, Yanni Sun, and James Cole. 
+## Very important:
+1. The hmm file can contain multiple hmm models and should be in **HMMER3.0**'s hmm file format. All the hmm files of Pfam database can be downloaded from Pfam (http://pfam.xfam.org/).  
+2. The nucleotide sequence file should be in fasta format. All the reads should be in a single fasta file.  
+3. The format of paired-end reads is should be in **".1" and ".2" or "/1" and "/2"** notation. An example of a paired-end read will be gnl|SRA|SRR360147.1.1 and gnl|SRA|SRR360147.1.2.  
+4. Sequences DO NOT have to be all paired. As long as all sequence name follow the name format required above, orphan reads are allowed. 
 
-You may redistribute this software under the terms of GNU GENERAL PUBLIC LICENSE.
+------------
+
+
+More info are in original repo: https://github.com/zhangy72/SAT-Assembler.git
