@@ -1,6 +1,6 @@
 I wanted to try [SAT-Assemlber](https://github.com/zhangy72/SAT-Assembler.git) for a project. 
 Another github member [jiarong](https://github.com/jiarong/SAT-Assembler) found a few issues and fixed them. 
-I found a few more that I have fixed and I hope this makes it more generalisable:
+I found a few more issues that I have fixed and I hope this makes it more generalisable:
 
 This README file contains the original text from jiarong's fixes as well as some additions by me.
 
@@ -47,10 +47,13 @@ SAT-Assembler.sh -m <HMM file> -f <fasta file> [options]
 
 An example with test data:
 
+Make sure that your fasta file of reads is in the working directory that you specify.
+The output directory will become a sub-directory of the working directory.
+
 ```bash
 cd SAT-Assembler/test
 gzip -d -c P_syringae-se-200K.fa.gz > P_syringae-se-200K.fa
-../SAT-Assembler.sh -m rplB.hmm -f P_syringae-se-200K.fa -o test.out
+../SAT-Assembler.sh -m rplB.hmm -f P_syringae-se-200K.fa -o test.out -w ./
 ```
 You will see the `rplB_contigs.fa` and `rplB_scaffolds.txt` in `test.out`
 
