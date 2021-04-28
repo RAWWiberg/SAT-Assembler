@@ -141,9 +141,10 @@ def get_hmmer_aligned_read_dict(in_file_name, target_domain,
             if not line.strip():
                 continue
             items = line.strip().split()
-            domain = items[1][:7]
+            domain = items[1]#[:7]
             evalue = float(items[3])
             if domain == target_domain and evalue <= EVALUE_THRES:
+            	print items
                 read_name = items[0]
                 score = float(items[2])
                 begin_state = int(items[4])
@@ -2148,12 +2149,14 @@ def main():
     overlap_thres = int(sys.argv[4])
     diff_thres = float(sys.argv[5])
     out_dir = sys.argv[6]
+    print target_domain
     NSCORE_THRES = 0
     EVALUE_THRES = 1000
     aligned_read_dict = get_hmmer_aligned_read_dict(alignment_file_name, 
                                                     target_domain,
                                                     EVALUE_THRES)
     target_read_dict = aligned_read_dict
+    print aligned_read_dict
     if not aligned_read_dict:
         sys.stderr.write('No read belongs to the gene family! No contig is generated!\n')
         sys.exit(2)
