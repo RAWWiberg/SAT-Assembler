@@ -98,7 +98,14 @@ fi
 tmp="$(cd $out && pwd)"
 base_fasta=`echo $fasta | awk '{split($1,a,"/"); print a[length(a)]}'`
 
-$DIR/DNA2Protein 1-6 $fasta $tmp/${base_fasta} 
+# Move to the output directory to run DNA2Protein
+working_dir=$(pwd)
+cd ${tmp}
+$DIR/DNA2Protein 1-6 $fasta ${base_fasta} 
+
+# Move back to the working directory
+cd ${working_dir}
+
 # generate a list of domains in the input hmm file.
 python $DIR/parse_hmm_files.py $hmm $tmp/HMMs
 ls $tmp/HMMs | while read line
