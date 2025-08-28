@@ -22,6 +22,7 @@ usage() {
     -h:  show this message
     -t:  alignment overlap threshold, default: 20;
     -d:  relative overlap difference threshold: 0.15;
+    -w:  working directory (should contain the fasta file, output directory will become a sub-directory)
     -o:  output directory"
 }
 
@@ -30,10 +31,17 @@ fasta=
 t=20
 d=0.15
 out=
-# installation dir.
-DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+working_dir=
 
-while getopts "hm:f:t:d:o:" OPTION
+# Get the installation directory
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+#echo "${DIR}"
+
+# Get the current directory
+#working_dir=$(pwd)
+#echo "${working_dir}"
+
+while getopts "hm:f:t:d:w:o:" OPTION
 do
   case $OPTION in
     h)
@@ -51,6 +59,9 @@ do
       ;;
     d)
       d=$OPTARG
+      ;;
+    w)
+      working_dir=$OPTARG
       ;;
     o)
       out=$OPTARG     
@@ -70,6 +81,12 @@ if [ "$fasta" == "" ];then
   exit
 fi
 
+if [ "$working_dir" == "" ];then
+  echo "Please give the working directory."
+  usage
+  exit
+fi
+
 if [ "$out" == "" ];then
   echo "Please specify the output folder."
   usage
@@ -77,7 +94,7 @@ if [ "$out" == "" ];then
 fi
 
 
-if ! which hmmsearch 2> /dev/null; then
+if [ `which hmmsearch 2> /dev/null | wc -l` -eq 0 ]; then
   echo "hmmsearch is not found.";
   usage
   exit 1
@@ -122,6 +139,7 @@ for hmmfile in $tmp/HMMs/*; do
     done
     echo "Assembling ${hmm_acc}"
     python $DIR/assembler.py $tmp/${base_fasta}_${hmm_acc}.hmmer $fasta ${hmm_acc} $t $d $out 
+
 done
-#rm -r $tmp/HMMs
-#rm $tmp/${base_fasta}.frame?
+#rm -r ${out_dir}/HMMs
+#rm ${out_dir}/${base_fasta}.frame?
